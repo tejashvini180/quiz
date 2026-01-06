@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Our Special Day ❤️</title>
+
+<style>
+body{
+  margin:0;
+  font-family:Arial, sans-serif;
+  background:linear-gradient(135deg,#ff9a9e,#fad0c4);
+  height:100vh;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+}
+
+.container{
+  background:white;
+  width:90%;
+  max-width:420px;
+  padding:20px;
+  border-radius:16px;
+  text-align:center;
+  position:relative;
+  overflow:hidden;
+}
+
+h2{margin-bottom:14px}
+
+.option{
+  width:100%;
+  padding:12px;
+  margin:8px 0;
+  font-size:16px;
+  border:none;
+  border-radius:12px;
+  cursor:pointer;
+  background:#eee;
+  transition:0.2s;
+}
+
+.option.correct{
+  background:#2196f3;
+  color:white;
+}
+
+.option.correct::after{
+  content:" ⭐";
+}
+
+.option.wrong{
+  background:#f44336;
+  color:white;
+}
+
+#msg{
+  margin-top:10px;
+  font-weight:bold;
+  min-height:24px;
+}
+
+.shake{animation:shake .3s}
+@keyframes shake{
+  0%{transform:translateX(0)}
+  25%{transform:translateX(-5px)}
+  50%{transform:translateX(5px)}
+  75%{transform:translateX(-5px)}
+  100%{transform:translateX(0)}
+}
+
+#hearts span{
+  position:fixed;
+  font-size:22px;
+  animation:fly 1s ease-out forwards;
+}
+@keyframes fly{
+  to{transform:translateY(-120px);opacity:0}
+}
+
+#finalScreen{
+  position:fixed;
+  inset:0;
+  background:linear-gradient(135deg,#ff758c,#ff7eb3);
+  color:white;
+  display:none;
+  justify-content:center;
+  align-items:center;
+  flex-direction:column;
+  text-align:center;
+  z-index:999;
+  padding:20px;
+}
+
+#finalScreen h1{
+  font-size:34px;
+  white-space: pre-line; /* allow line breaks */
+}
+
+.type{
+  border-right:2px solid white;
+  white-space:pre-wrap;
+  overflow:hidden;
+}
+
+/* Reasoning overlay */
+#reasoningScreen{
+  display:none;
+  position:fixed;
+  inset:0;
+  background:linear-gradient(135deg,#fbc2eb,#a6c1ee);
+  color:white;
+  justify-content:center;
+  align-items:center;
+  flex-direction:column;
+  text-align:center;
+  z-index:999;
+  padding:20px;
+}
+#reasoningScreen button{
+  padding:10px 20px;
+  font-size:16px;
+  border:none;
+  border-radius:12px;
+  cursor:pointer;
+  background:#2196f3;
+  color:white;
+  margin-top:10px;
+}
+
+/* Start Button */
+#startBtn {
+  position:fixed;
+  top:50%;
+  left:50%;
+  transform:translate(-50%,-50%);
+  padding:20px 40px;
+  font-size:20px;
+  border:none;
+  border-radius:12px;
+  cursor:pointer;
+  background:#2196f3;
+  color:white;
+  z-index:1000;
+}
+</style>
+</head>
+
+<body>
+
+<!-- Start Button -->
+<button id="startBtn">Start Quiz 🎮</button>
+
+<!-- Quiz Container -->
+<div class="container">
+  <h2 id="question"></h2>
+  <div id="options"></div>
+  <div id="msg"></div>
+</div>
+
+<div id="hearts"></div>
+
+<!-- Reasoning Overlay -->
+<div id="reasoningScreen">
+  <h1>😌 Reasoning</h1>
+  <p style="font-size:18px; line-height:1.5;">
+    endhukante…<br><br>
+    Nikosam design chesina games nuvvu adatle 😤<br><br>
+    Still complain chesthav 🤨
+  </p>
+  <button id="reasoningNext">OKAY 😅</button>
+</div>
+
+<!-- Final Screen -->
+<div id="finalScreen">
+  <h1 id="finalText" class="type"></h1>
+</div>
+
+<!-- Audio -->
+<audio id="bgm" src="music.mp3" loop></audio>
+<audio id="bell" src="bell.mp3"></audio>
+<audio id="noSound" src="nope.mp3"></audio>
+<audio id="voice"></audio>
+
+<script>
+// Quiz Data
+const quiz=[
+  { q:"💫 \nWhen did we first meet?", options:["special day📝💙","College first day","Instagram DM","Through friends"], correct:0 },
+  { q:"My favorite food? 🍽️", options:["Ice cream","Anything you cook 😋","Biryani","Pani puri","Chocolate"], correct:1 },
+  { q:"What do I call you? 😏", options:["Pukaa","Erripukaa","Kukka","Prudvi Raj"], correct:2 },
+  { q:"Nuvvu waste fellow kadha? 😈", options:["YES","NO"], correct:0 }
+];
+
+let index=0;
+const qEl=document.getElementById("question");
+const oEl=document.getElementById("options");
+const msg=document.getElementById("msg");
+const bgm=document.getElementById("bgm");
+const voice=document.getElementById("voice");
+const reasoningScreen=document.getElementById("reasoningScreen");
+const reasoningNext=document.getElementById("reasoningNext");
+const startBtn=document.getElementById("startBtn");
+
+bgm.volume = 0.6;
+
+// ===== Start Quiz Button =====
+startBtn.onclick = () => {
+  bgm.play().catch(()=>{});
+  loadQuestion();
+  startBtn.style.display="none";
+}
+
+// ===== Load Question =====
+function loadQuestion(){
+  qEl.innerText=quiz[index].q;
+  oEl.innerHTML="";
+  msg.innerText="";
+
+  quiz[index].options.forEach((opt,i)=>{
+    const btn=document.createElement("button");
+    btn.className="option";
+    btn.innerText=opt;
+
+    if(opt==="NO"){
+      btn.addEventListener("mouseover",moveButton);
+      btn.addEventListener("touchstart",moveButton);
+    }
+
+    btn.onclick=()=>checkAnswer(btn,i);
+    oEl.appendChild(btn);
+  });
+
+  playVoice();
+}
+
+// Play voice & bell
+function playVoice(){
+  voice.src=`q${index+1}.mp3`;
+  voice.play().catch(()=>{});
+
+  if(index===0){
+    document.getElementById("bell").play().catch(()=>{});
+  }
+}
+
+// NO button move
+function moveButton(e){
+  const btn=e.target;
+  document.getElementById("noSound").play();
+  btn.classList.add("shake");
+
+  const maxX=window.innerWidth-btn.offsetWidth;
+  const maxY=window.innerHeight-btn.offsetHeight;
+
+  btn.style.position="fixed";
+  btn.style.left=Math.random()*maxX+"px";
+  btn.style.top=Math.random()*maxY+"px";
+
+  msg.innerText="😏 NO enduku try chestunnav ra… YES eh correct!!";
+}
+
+// Check Answer
+function checkAnswer(btn,i){
+  document.querySelectorAll(".option").forEach(b=>b.disabled=true);
+
+  if(i===quiz[index].correct){
+    btn.classList.add("correct");
+    msg.innerText="💙 Correct ra nanna!";
+    burstHearts();
+
+    if(index===0){
+      setTimeout(()=>{ msg.innerText="💫 JEE Mains roju…  ❤️"; },700);
+    }
+
+    if(index===quiz.length-1){
+      setTimeout(()=>{ showReasoning(); },1000);
+      return;
+    }
+  }else{
+    btn.classList.add("wrong");
+    msg.innerText="❌ Wrong ra!";
+  }
+
+  setTimeout(()=>{
+    index++;
+    if(index<quiz.length){
+      loadQuestion();
+    }
+  },2000);
+}
+
+// Hearts Animation
+function burstHearts(){
+  for(let i=0;i<10;i++){
+    const h=document.createElement("span");
+    h.innerText="❤️";
+    h.style.left=Math.random()*100+"vw";
+    h.style.top="80vh";
+    document.getElementById("hearts").appendChild(h);
+    setTimeout(()=>h.remove(),1000);
+  }
+}
+
+// Typewriter
+function typeText(el, text){
+  el.innerText = "";
+  let i = 0;
+  const t = setInterval(() => {
+    el.innerText += text[i];
+    i++;
+    if(i >= text.length) clearInterval(t);
+  }, 80);
+}
+
+// ===== Reasoning + Final =====
+function showReasoning(){ reasoningScreen.style.display="flex"; }
+
+reasoningNext.onclick = ()=>{
+  reasoningScreen.style.display="none";
+  showFinal();
+}
+
+function showFinal(){
+  const final = document.getElementById("finalScreen");
+  final.style.display="flex";
+
+  voice.src="final.mp3";
+  voice.play().catch(()=>{});
+
+  for(let i=0;i<20;i++){
+    setTimeout(burstHearts, i*150);
+  }
+
+  typeText(document.getElementById("finalText"),
+    "You already won me ❤️\nNow go and PLAY all my games well… don’t ignore me 😏🎮"
+  );
+}
+
+// ===== REMOVE auto-start =====
+// loadQuestion(); <-- removed
+</script>
+
+</body>
+</html>
+
+
+
+
