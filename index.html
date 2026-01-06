@@ -212,18 +212,20 @@ function loadQuestion(){
   oEl.innerHTML="";
   msg.innerText="";
 
-  quiz[index].options.forEach((opt,i)=>{
-    const btn=document.createElement("button");
-    btn.className="option";
-    btn.innerText=opt;
+  quiz[index].options.forEach((opt, i) => {
+    const btn = document.createElement("button");
+    btn.className = "option";
+    btn.innerText = opt;
 
-    // NO button trick
-    if(opt==="NO"){
+    if(opt === "NO"){
+      // NO button never triggers checkAnswer
       btn.addEventListener("mouseover", moveButton);
       btn.addEventListener("touchstart", moveButton);
+    } else {
+      // Only other buttons are clickable
+      btn.onclick = () => checkAnswer(btn, i);
     }
 
-    btn.onclick=()=>checkAnswer(btn,i);
     oEl.appendChild(btn);
   });
 
@@ -232,10 +234,10 @@ function loadQuestion(){
 
 // Play voice & bell
 function playVoice(){
-  voice.src=`q${index+1}.mp3`;
+  voice.src = `q${index+1}.mp3`;
   voice.play().catch(()=>{});
 
-  if(index===0){
+  if(index === 0){
     document.getElementById("bell").play().catch(()=>{});
   }
 }
@@ -253,41 +255,43 @@ function moveButton(e){
   btn.style.left = Math.random() * maxX + "px";
   btn.style.top = Math.random() * maxY + "px";
 
-  // Always keep YES clickable
+  // Ensure YES is always clickable
   const options = document.querySelectorAll(".option");
-  options.forEach(o => { if(o.innerText !== "NO") o.disabled = false; });
+  options.forEach(o => {
+    if(o.innerText !== "NO") o.disabled = false;
+  });
 
   msg.innerText = "😏 NO enduku try chestunnav ra… YES eh correct!!";
 }
 
 // Check Answer
-function checkAnswer(btn,i){
+function checkAnswer(btn, i){
   document.querySelectorAll(".option").forEach(b=>b.disabled=true);
 
-  if(i===quiz[index].correct){
+  if(i === quiz[index].correct){
     btn.classList.add("correct");
-    msg.innerText="💙 Correct ra nanna!";
+    msg.innerText = "💙 Correct ra nanna!";
     burstHearts();
 
-    if(index===0){
-      setTimeout(()=>{ msg.innerText="💫 JEE Mains roju…  ❤️"; },700);
+    if(index === 0){
+      setTimeout(() => { msg.innerText = "💫 JEE Mains roju…  ❤️"; }, 700);
     }
 
-    if(index===quiz.length-1){
-      setTimeout(()=>{ showReasoning(); },1000);
+    if(index === quiz.length-1){
+      setTimeout(() => { showReasoning(); }, 1000);
       return;
     }
-  }else{
+  } else {
     btn.classList.add("wrong");
-    msg.innerText="❌ Wrong ra!";
+    msg.innerText = "❌ Wrong ra!";
   }
 
-  setTimeout(()=>{
+  setTimeout(() => {
     index++;
-    if(index<quiz.length){
+    if(index < quiz.length){
       loadQuestion();
     }
-  },2000);
+  }, 2000);
 }
 
 // Hearts Animation
@@ -295,8 +299,8 @@ function burstHearts(){
   for(let i=0;i<10;i++){
     const h=document.createElement("span");
     h.innerText="❤️";
-    h.style.left=Math.random()*100+"vw";
-    h.style.top="80vh";
+    h.style.left = Math.random()*100+"vw";
+    h.style.top = "80vh";
     document.getElementById("hearts").appendChild(h);
     setTimeout(()=>h.remove(),1000);
   }
@@ -316,7 +320,7 @@ function typeText(el, text){
 // ===== Reasoning + Final =====
 function showReasoning(){ reasoningScreen.style.display="flex"; }
 
-reasoningNext.onclick = ()=>{
+reasoningNext.onclick = () => {
   reasoningScreen.style.display="none";
   showFinal();
 }
@@ -325,7 +329,7 @@ function showFinal(){
   const final = document.getElementById("finalScreen");
   final.style.display="flex";
 
-  voice.src="final.mp3";
+  voice.src = "final.mp3";
   voice.play().catch(()=>{});
 
   for(let i=0;i<20;i++){
@@ -340,4 +344,6 @@ function showFinal(){
 
 </body>
 </html>
+
+
 
