@@ -95,7 +95,7 @@ h2{margin-bottom:14px}
 
 #finalScreen h1{
   font-size:34px;
-  white-space: pre-line; /* allow line breaks */
+  white-space: pre-line;
 }
 
 .type{
@@ -178,7 +178,6 @@ h2{margin-bottom:14px}
 </div>
 
 <!-- Audio -->
-<audio id="bgm" src="music.mp3" loop></audio>
 <audio id="bell" src="bell.mp3"></audio>
 <audio id="noSound" src="nope.mp3"></audio>
 <audio id="voice"></audio>
@@ -196,17 +195,13 @@ let index=0;
 const qEl=document.getElementById("question");
 const oEl=document.getElementById("options");
 const msg=document.getElementById("msg");
-const bgm=document.getElementById("bgm");
 const voice=document.getElementById("voice");
 const reasoningScreen=document.getElementById("reasoningScreen");
 const reasoningNext=document.getElementById("reasoningNext");
 const startBtn=document.getElementById("startBtn");
 
-bgm.volume = 0.6;
-
 // ===== Start Quiz Button =====
 startBtn.onclick = () => {
-  bgm.play().catch(()=>{});
   loadQuestion();
   startBtn.style.display="none";
 }
@@ -222,9 +217,10 @@ function loadQuestion(){
     btn.className="option";
     btn.innerText=opt;
 
+    // NO button trick
     if(opt==="NO"){
-      btn.addEventListener("mouseover",moveButton);
-      btn.addEventListener("touchstart",moveButton);
+      btn.addEventListener("mouseover", moveButton);
+      btn.addEventListener("touchstart", moveButton);
     }
 
     btn.onclick=()=>checkAnswer(btn,i);
@@ -244,20 +240,24 @@ function playVoice(){
   }
 }
 
-// NO button move
+// NO button move (unreachable)
 function moveButton(e){
-  const btn=e.target;
+  const btn = e.target;
   document.getElementById("noSound").play();
   btn.classList.add("shake");
 
-  const maxX=window.innerWidth-btn.offsetWidth;
-  const maxY=window.innerHeight-btn.offsetHeight;
+  const maxX = window.innerWidth - btn.offsetWidth - 20;
+  const maxY = window.innerHeight - btn.offsetHeight - 20;
 
-  btn.style.position="fixed";
-  btn.style.left=Math.random()*maxX+"px";
-  btn.style.top=Math.random()*maxY+"px";
+  btn.style.position = "fixed";
+  btn.style.left = Math.random() * maxX + "px";
+  btn.style.top = Math.random() * maxY + "px";
 
-  msg.innerText="😏 NO enduku try chestunnav ra… YES eh correct!!";
+  // Always keep YES clickable
+  const options = document.querySelectorAll(".option");
+  options.forEach(o => { if(o.innerText !== "NO") o.disabled = false; });
+
+  msg.innerText = "😏 NO enduku try chestunnav ra… YES eh correct!!";
 }
 
 // Check Answer
@@ -336,9 +336,6 @@ function showFinal(){
     "You already won me ❤️\nNow go and PLAY all my games well… don’t ignore me 😏🎮"
   );
 }
-
-// ===== REMOVE auto-start =====
-// loadQuestion(); <-- removed
 </script>
 
 </body>
